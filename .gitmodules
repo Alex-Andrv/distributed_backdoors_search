@@ -1,3 +1,6 @@
 [submodule "kissat_with_db_integration"]
 	path = kissat_with_db_integration
 	url = git@github.com:Alex-Andrv/kissat_with_db_integration.git
+[submodule "backdoor-producer"]
+	path = backdoor-producer
+	url = git@github.com:Alex-Andrv/backdoor-producer.git
