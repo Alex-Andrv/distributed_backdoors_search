@@ -1,4 +1,4 @@
-*/.idea/*
+*.idea*
 
 /kissat_with_db_integration/.idea/
 /database/
