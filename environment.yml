@@ -1,0 +1,9 @@
+name: multithreading_sat_solver
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11.6
+  - gxx=13.2.0
+  - redis=5.0.3
+  - click=8.1.7
