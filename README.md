@@ -4,6 +4,8 @@ conda config --add channels conda-forge
 conda env create -f environment.yml
 source activate multithreading_solver
 
+cd hiredis-1.2.0/
+mkdir build && cd build
 curl -sL https://github.com/redis/hiredis/archive/refs/tags/v1.2.0.tar.gz | tar -xz
 cmake -DCMAKE_INSTALL_PREFIX:PATH=$CONDA_PREFIX ..
 make install
