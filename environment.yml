@@ -1,4 +1,4 @@
-name: multithreading_sat_solver
+name: multithreading_solver
 channels:
   - defaults
   - conda-forge
