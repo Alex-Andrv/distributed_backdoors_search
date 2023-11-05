@@ -4,8 +4,6 @@ channels:
   - conda-forge
 dependencies:
   - python=3.11.6
-  - gxx=13.2.0
   - redis=5.0.3
   - click=8.1.7
   - redis-py=5.0.1
-  - hiredis=2.2.3
