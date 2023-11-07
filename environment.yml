@@ -8,4 +8,4 @@ dependencies:
   - click=8.1.7
   - redis-py=5.0.1
   - pip:
-      -python-sat==0.1.7
+      -python-sat==0.1.7.dev15
