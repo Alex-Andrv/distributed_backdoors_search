@@ -9,4 +9,5 @@ dependencies:
   - redis-py=5.0.1
   - tqdm=4.66.1
   - pip:
-      -python-sat==0.1.7.dev15
+      -python-sat==0.1.8.dev9
+      -pyeda=0.28.0

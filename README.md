@@ -27,3 +27,6 @@ redis-server &
 redis-cli SHUTDOWN
 
 запустите redis
+
+export HIREDIS_INCLUDE_DIR=/usr/local/include/hiredis
+export HIREDIS_LIB=/usr/local/lib
