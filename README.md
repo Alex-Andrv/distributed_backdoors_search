@@ -12,9 +12,9 @@ make install
 cd ../
 
 cd minisat_with_redis_integration
-mkdir build && cd build
 export HIREDIS_INCLUDE_DIR=$CONDA_PREFIX/include/hiredis
 export HIREDIS_LIB=$CONDA_PREFIX/lib
+mkdir build && cd build
 cmake ..
 make
 
@@ -24,5 +24,6 @@ cmake ..
 make
 
 redis-server &
+redis-cli SHUTDOWN
 
 запустите redis

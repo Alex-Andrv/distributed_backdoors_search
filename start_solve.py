@@ -82,10 +82,12 @@ def build_backdoor_searcher():
     os.chdir(current_directory)
 
 
-async def run_backdoor_producer(task_path, tmp_dir, n, random_seed, ea_num_runs,
-                                                               ea_instance_sizes,
-                                                               ea_num_iters, mini_confs, root_log_dir, redis_host, redis_port,
-                                                               no_compile):
+async def run_backdoor_producer(task_path, tmp_dir,
+                                n, random_seed,
+                                ea_num_runs, ea_instance_sizes,
+                                ea_num_iters, mini_confs,
+                                root_log_dir, redis_host,
+                                redis_port, no_compile):
     current_directory = os.getcwd()
     os.chdir("backdoor-producer")
     if not no_compile:
