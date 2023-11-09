@@ -1,4 +1,6 @@
 # distributed_backdoors_search
+
+```
 git clone git@github.com:Alex-Andrv/distributed_backdoors_search.git
 
 git submodule update --init --recursive
@@ -53,6 +55,7 @@ mkdir build && cd build
 cmake ..
 
 make
+```
 
 запустите скрипт [run_lec_DvC_12.sh](run_lec_DvC_12.sh)
 
