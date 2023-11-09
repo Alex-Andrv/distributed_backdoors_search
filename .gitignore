@@ -1,7 +1,9 @@
-*.idea*
-
-/kissat_with_db_integration/.idea/
+.idea/
+.DS_Store
+/data/
 /database/
 /config.ini
-data/*
-/backdoor-producer/tmp/
+tmp/
+log/
+
+hiredis-1.2.0/
