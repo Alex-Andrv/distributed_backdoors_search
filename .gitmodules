@@ -7,3 +7,4 @@
 [submodule "minisat_with_redis_integration"]
 	path = minisat_with_redis_integration
 	url = git@github.com:Alex-Andrv/minisat_with_redis_integration.git
+; TODO поменять на http
