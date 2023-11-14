@@ -9,4 +9,4 @@ dependencies:
   - tqdm=4.66.1
   - pip:
       - python-sat==0.1.8.dev9
-      - pyeda=0.28.0
+      - pyeda==0.28.0
