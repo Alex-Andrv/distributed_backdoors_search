@@ -2,13 +2,17 @@ import asyncio
 import glob
 import os
 import shutil
+from pathlib import Path
 
 import click
 import subprocess
 
+import pysat
 import redis
 
 import random
+
+from pysat.process import Processor
 
 
 async def run_docker_compose(_, redis_port, container_name="docker_redis"):
@@ -32,8 +36,8 @@ def ping_redis(redis_host, redis_port):
             raise redis.exceptions.ConnectionError()
 
 
-def clean_dir(path_dir):
-    files = glob.glob(path_dir + '/*')
+def clean_dir(path_dir: Path):
+    files = glob.glob(str(path_dir) + '/*')
 
     for file in files:
         try:
@@ -47,19 +51,56 @@ def clean_dir(path_dir):
             raise e
 
 
-async def solve(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile, redis_host,
+async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile,
+                preprocessing, redis_host,
                 redis_port, n, ea_num_runs, ea_instance_sizes,
                 ea_num_iters, mini_confs):
+    task_path = Path(task_path)
+    log_dir = Path(log_dir)
     clean_dir(log_dir)
+
+    if preprocessing:
+        cnf = pysat.formula.CNF(from_file=task_path)
+
+        processor = Processor(bootstrap_with=cnf)
+        processed = processor.process(rounds=1, block=False, cover=False, condition=False, decompose=True, elim=True,
+                                      probe=True,
+                                      probehbr=True, subsume=True, vivify=True)
+
+        stem = task_path.stem
+        suffix = task_path.suffix
+        parent = task_path.parent
+        task_path = parent / (stem + "_processed" + suffix)
+        processed.to_file(task_path)
+
     task_awaitable = await build_and_run_minisat_with_redis_integration(task_path, max_learning, max_buffer_size,
                                                                         log_dir, redis_host, redis_port, no_compile)
     await asyncio.sleep(2)
     backdoor_producers_awaitable = await run_backdoor_producer(task_path, tmp_dir, n, random_seed, ea_num_runs,
                                                                ea_instance_sizes,
-                                                               ea_num_iters, mini_confs, log_dir, redis_host, redis_port,
+                                                               ea_num_iters, mini_confs, log_dir, redis_host,
+                                                               redis_port,
                                                                no_compile)
+
     return_code = await task_awaitable.wait()
     print(f"return code = {return_code}")
+    if preprocessing:
+        if return_code == 20:
+            # UNSAT
+            pass
+        elif return_code == 10:
+            # SAT
+            with open(log_dir / "minisat-stdout", 'r') as result_file:
+                result_file.readline()
+                result = list(result_file.readline().split()[:-1])
+                real_result = map(str, processor.restore(result))
+                with open(log_dir / "minisat-stdout-real", 'w') as real_result_file:
+                    real_result_file.write("SAT\n")
+                    real_result_file.write(' '.join(real_result) + " 0")
+        else:
+            # INDET
+            pass
+
     for task in backdoor_producers_awaitable:
         task.kill()
 
@@ -96,13 +137,14 @@ async def run_backdoor_producer(task_path, tmp_dir,
     random.seed(random_seed)
 
     tasks = []
-    command = f"python star_producer.py --cnf {'../' + task_path}"
-    for i, (ea_num_run, ea_instance_size, ea_num_iters, mini_conf) in enumerate(zip(ea_num_runs, ea_instance_sizes, ea_num_iters, mini_confs)):
-        log_dir = '../' + root_log_dir + f"/backdoor-producer-instance:{i}-ea_num_run:{ea_num_run}-ea_instance_size:{ea_instance_size}-ea_num_iters:{ea_num_iters}-mini_conf:{mini_conf}"
+    command = f"python star_producer.py --cnf {'../' / task_path}"
+    for i, (ea_num_run, ea_instance_size, ea_num_iters, mini_conf) in enumerate(
+            zip(ea_num_runs, ea_instance_sizes, ea_num_iters, mini_confs)):
+        log_dir = '../' / root_log_dir / f"backdoor-producer-instance:{i}-ea_num_run:{ea_num_run}-ea_instance_size:{ea_instance_size}-ea_num_iters:{ea_num_iters}-mini_conf:{mini_conf}"
         experement_dir = os.path.join(log_dir, "experement")
         os.makedirs(log_dir)
-        stdout_log_file = log_dir + "/backdoor-producer-stdout"
-        stderr_log_file = log_dir + "/backdoor-producer-stderr"
+        stdout_log_file = log_dir / "backdoor-producer-stdout"
+        stderr_log_file = log_dir / "backdoor-producer-stderr"
         new_seed = random.randint(1, 10000)
         params = (
             f"--tmp {tmp_dir + str(i)} --random-seed {new_seed} --ea-num-runs {ea_num_run} --ea-instance-size {ea_instance_size} --ea-num-iters {ea_num_iters} "
@@ -137,10 +179,10 @@ async def build_and_run_minisat_with_redis_integration(task_path, max_learning, 
     else:
         os.chdir("build")
 
-    stdout_log_file = "../../" + log_dir + "/minisat-stdout"
-    stderr_log_file = "../../" + log_dir + "/minisat-stderr"
+    stdout_log_file = "../.." / log_dir / "minisat-stdout"
+    stderr_log_file = "../.." / log_dir / "minisat-stderr"
     # Run command "./minisat"
-    command = (f"./minisat {'../../' + task_path} -max-clause-len={max_learning} -redis-buffer={max_buffer_size} "
+    command = (f"./minisat {'../../' / task_path} -max-clause-len={max_learning} -redis-buffer={max_buffer_size} "
                f"-redis-host={redis_host} -redis-port={redis_port}")
     task_awaitable = await asyncio.create_subprocess_shell(f"{command} > {stdout_log_file} 2> {stderr_log_file}")
     # Restore the original directory (if necessary)
@@ -170,6 +212,9 @@ def flushall_redis(redis_host, redis_port):
 @click.option(
     "--no-compile/--compile", "no_compile", default=True, help="no compile"
 )
+@click.option(
+    "--preprocessing/--no-preprocessing", "preprocessing", default=True, help="using CaDiCaL(1.5.3) preprocessing"
+)
 @click.option('--redis-host', default='localhost', help='Redis server host')
 @click.option('--redis-port', default=6379, help='Redis server port')
 @click.option('-n', type=int, required=True, help='Number of different backdoor-producer runs')
@@ -178,7 +223,8 @@ def flushall_redis(redis_host, redis_port):
 @click.option('-ei', '--ea-num-iters', type=int, required=True, multiple=True, help='Number of iterations')
 @click.option('-c', '--mini-confs', type=int, required=True, multiple=True, help='Number of conflicts')
 def main(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile,
-         redis_host, redis_port, n, ea_num_runs, ea_instance_sizes, ea_num_iters, mini_confs):
+         preprocessing, redis_host, redis_port, n, ea_num_runs,
+         ea_instance_sizes, ea_num_iters, mini_confs):
     """
     This script executes the solver
     example:
@@ -202,7 +248,8 @@ def main(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
-        solve(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile, redis_host,
+        solve(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile, preprocessing,
+              redis_host,
               redis_port, n, ea_num_runs, ea_instance_sizes,
               ea_num_iters, mini_confs))
 

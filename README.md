@@ -47,7 +47,7 @@ Compile the backdoor searcher:
 cd backdoor-producer/backdoor-searcher
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-cd ../..
+cd ../../
 ```
 
 Run [`run_lec_DvC_12.sh`](run_lec_DvC_12.sh).
