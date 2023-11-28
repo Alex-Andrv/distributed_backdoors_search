@@ -69,12 +69,15 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
 
         stem = task_path.stem
         suffix = task_path.suffix
-        parent = task_path.parent
-        task_path = parent / (stem + "_processed" + suffix)
+        task_path = log_dir / (stem + "_processed" + suffix)
         processed.to_file(task_path)
 
-    task_awaitable = await build_and_run_minisat_with_redis_integration(task_path, max_learning, max_buffer_size,
-                                                                        log_dir, redis_host, redis_port, no_compile)
+    # task_awaitable = await build_and_run_minisat_with_redis_integration(task_path, max_learning, max_buffer_size,
+    #                                                                     log_dir, redis_host, redis_port, no_compile)
+
+    task_awaitable = await build_and_run_mapl_with_redis_integration(task_path, max_learning, max_buffer_size,
+                                                                     log_dir, redis_host, redis_port, no_compile)
+
     await asyncio.sleep(2)
     backdoor_producers_awaitable = await run_backdoor_producer(task_path, tmp_dir, n, random_seed, ea_num_runs,
                                                                ea_instance_sizes,
@@ -189,6 +192,35 @@ async def build_and_run_minisat_with_redis_integration(task_path, max_learning, 
     os.chdir(current_directory)
 
     print("run minisat")
+
+    return task_awaitable
+
+
+async def build_and_run_mapl_with_redis_integration(task_path, max_learning, max_buffer_size, log_dir,
+                                                    redis_host, redis_port, no_compile):
+    # Save the current directory
+    current_directory = os.getcwd()
+    # Change to the "minisat_with_redis_integration" directory
+    os.chdir("Maple_LCM_Dist_Chrono_with_redis/sources/core/")
+
+    if not no_compile:
+        # Run the "cmake .." command
+        subprocess.run("make clean", shell=True, check=True)
+
+        # Run the "make" command
+        subprocess.run("make r", shell=True, check=True)
+
+    stdout_log_file = "../../.." / log_dir / "mapl-stdout"
+    stderr_log_file = "../../.." / log_dir / "mapl-stderr"
+    # Run command "./minisat"
+    command = (
+        f"./glucose_release {'../../../' / task_path} -max-clause-len={max_learning} -redis-buffer={max_buffer_size} "
+        f"-redis-host={redis_host} -redis-port={redis_port}")
+    task_awaitable = await asyncio.create_subprocess_shell(f"{command} > {stdout_log_file} 2> {stderr_log_file}")
+    # Restore the original directory (if necessary)
+    os.chdir(current_directory)
+
+    print("run mapl")
 
     return task_awaitable
 
