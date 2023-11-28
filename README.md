@@ -25,13 +25,21 @@ make PREFIX=$(realpath install) -j install
 cd ..
 ```
 
-Compile the solver (MiniSat with Redis integration):
+Compile the solver (MiniSat with Redis integration) (deprecate, use mapl):
 ```
 cd distributed_backdoors_search
 cd minisat_with_redis_integration
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DHIREDIS_INCLUDE_DIR=$(realpath ../../hiredis-1.2.0/install/include/hiredis) -DHIREDIS_LIB=$(realpath ../../hiredis-1.2.0/install/lib)
 cmake --build build
 cd ..
+```
+
+Compile the solver (Maple_LCM_Dist_Chrono with Redis integration):
+```
+cd Maple_LCM_Dist_Chrono_with_redis/sources/core
+make clean
+make r
+cd ../../../
 ```
 
 Compile the backdoor searcher:
