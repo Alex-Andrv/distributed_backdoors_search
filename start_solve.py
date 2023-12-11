@@ -90,18 +90,20 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
     if preprocessing:
         if return_code == 20:
             # UNSAT
+            print("UNSAT")
             pass
         elif return_code == 10:
             # SAT
-            with open(log_dir / "minisat-stdout", 'r') as result_file:
+            with open(log_dir / "mapl-stdout", 'r') as result_file:
                 result_file.readline()
                 result = list(result_file.readline().split()[:-1])
                 real_result = map(str, processor.restore(result))
-                with open(log_dir / "minisat-stdout-real", 'w') as real_result_file:
+                with open(log_dir / "mapl-stdout-real", 'w') as real_result_file:
                     real_result_file.write("SAT\n")
                     real_result_file.write(' '.join(real_result) + " 0")
         else:
             # INDET
+            print("INDET")
             pass
 
     for task in backdoor_producers_awaitable:
@@ -216,6 +218,7 @@ async def build_and_run_mapl_with_redis_integration(task_path, max_learning, max
     command = (
         f"./glucose_release {'../../../' / task_path} -max-clause-len={max_learning} -redis-buffer={max_buffer_size} "
         f"-redis-host={redis_host} -redis-port={redis_port}")
+    print(command)
     task_awaitable = await asyncio.create_subprocess_shell(f"{command} > {stdout_log_file} 2> {stderr_log_file}")
     # Restore the original directory (if necessary)
     os.chdir(current_directory)

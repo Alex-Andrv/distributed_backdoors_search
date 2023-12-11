@@ -7,7 +7,6 @@
 [submodule "minisat_with_redis_integration"]
 	path = minisat_with_redis_integration
 	url = git@github.com:Alex-Andrv/minisat_with_redis_integration.git
-; TODO поменять на http
 [submodule "Maple_LCM_Dist_Chrono_with_redis"]
 	path = Maple_LCM_Dist_Chrono_with_redis
 	url = git@github.com:Alex-Andrv/Maple_LCM_Dist_Chrono_with_redis.git

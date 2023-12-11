@@ -36,10 +36,14 @@ cd ..
 
 Compile the solver (Maple_LCM_Dist_Chrono with Redis integration):
 ```
+export HIREDIS_INCLUDE_DIR=~/hiredis-1.2.0/install/include/hiredis
+export HIREDIS_LIB=~/hiredis-1.2.0/install/lib
+export LD_LIBRARY_PATH=~/hiredis-1.2.0/install/lib:$LD_LIBRARY_PATH
+
 cd Maple_LCM_Dist_Chrono_with_redis/sources/core
 make clean
 make r
-cd ../../../
+cd ~
 ```
 
 Compile the backdoor searcher:
