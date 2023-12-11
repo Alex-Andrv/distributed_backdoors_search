@@ -1,6 +1,5 @@
 .idea/
 .DS_Store
-/data/
 /database/
 /config.ini
 tmp/

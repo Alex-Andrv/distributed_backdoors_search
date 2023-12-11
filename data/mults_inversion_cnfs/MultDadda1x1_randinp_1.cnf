@@ -1,0 +1,9 @@
+p cnf 3 4
+c inputs: 1 2
+c variables for gates: 3 ... 3
+c outputs: 3
+c random input: -1 2
+3 -1 -2 0
+-3 1 0
+-3 2 0
+-3 0
