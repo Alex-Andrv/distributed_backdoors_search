@@ -13,6 +13,7 @@ import redis
 import random
 
 from pysat.process import Processor
+from redis import BusyLoadingError
 
 
 async def run_docker_compose(_, redis_port, container_name="docker_redis"):
@@ -28,7 +29,13 @@ async def run_docker_compose(_, redis_port, container_name="docker_redis"):
 
 def ping_redis(redis_host, redis_port):
     with redis.Redis(host=redis_host, port=redis_port) as redis_client:
-        response = redis_client.ping()
+        while True:
+            try:
+                response = redis_client.ping()
+                break
+            except BusyLoadingError:
+                pass
+
         if response:
             print("Redis server is up and running. Response to PING:", response)
         else:
@@ -94,13 +101,14 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
             pass
         elif return_code == 10:
             # SAT
-            with open(log_dir / "mapl-stdout", 'r') as result_file:
-                result_file.readline()
-                result = list(result_file.readline().split()[:-1])
-                real_result = map(str, processor.restore(result))
-                with open(log_dir / "mapl-stdout-real", 'w') as real_result_file:
-                    real_result_file.write("SAT\n")
-                    real_result_file.write(' '.join(real_result) + " 0")
+            if preprocessing:
+                with open(log_dir / "mapl-stdout", 'r') as result_file:
+                    result_file.readline()
+                    result = list(result_file.readline().split()[:-1])
+                    real_result = map(str, processor.restore(result))
+                    with open(log_dir / "mapl-stdout-real", 'w') as real_result_file:
+                        real_result_file.write("SAT\n")
+                        real_result_file.write(' '.join(real_result) + " 0")
         else:
             # INDET
             print("INDET")
