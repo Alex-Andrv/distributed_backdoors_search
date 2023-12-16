@@ -34,6 +34,7 @@ def ping_redis(redis_host, redis_port):
                 response = redis_client.ping()
                 break
             except BusyLoadingError:
+                print("BusyLoadingError")
                 pass
 
         if response:
