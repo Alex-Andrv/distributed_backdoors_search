@@ -107,7 +107,13 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
                 if preprocessing:
                     with open(log_dir / "mapl-stdout", 'r') as result_file:
                         first_line = result_file.readline()
-                        if "SATISFIABLE" not in first_line:
+                        if "solution checked" not in first_line:
+                            raise Exception("solution don't  checked ")
+                        second_line = result_file.readline()
+                        if "SATISFIABLE" not in second_line:
+                            raise Exception("file don't contains SATISFIABLE")
+                        second_line = result_file.readline()
+                        if "SATISFIABLE" not in second_line:
                             raise Exception("file don't contains SATISFIABLE")
                         ans = result_file.readline().split()
                         if (ans[1] != 'v') or (ans[1] != '0'):
