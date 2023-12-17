@@ -60,12 +60,11 @@ def clean_dir(path_dir: Path):
 
 def read_statistics(result_file):
     results = dict()
-    for i, line in enumerate(result_file):
-        if i == 7:
-            break
+    for _ in range(7):
+        line = result_file.readline()
         words = line.split()
-        key = words[1:words.find(":")]
-        value = words[words.find(":") + 1]
+        key = " ".join(words[1:words.index(":")])
+        value = words[words.index(":") + 1]
         results[key] = value
     return results
 
