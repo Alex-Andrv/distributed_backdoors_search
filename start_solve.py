@@ -83,40 +83,41 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
     # task_awaitable = await build_and_run_minisat_with_redis_integration(task_path, max_learning, max_buffer_size,
     #                                                                     log_dir, redis_host, redis_port, no_compile)
 
-    task_awaitable = await build_and_run_mapl_with_redis_integration(task_path, max_learning, max_buffer_size,
-                                                                     log_dir, redis_host, redis_port, no_compile)
+    try:
+        task_awaitable = await build_and_run_mapl_with_redis_integration(task_path, max_learning, max_buffer_size,
+                                                                         log_dir, redis_host, redis_port, no_compile)
 
-    await asyncio.sleep(2)
-    backdoor_producers_awaitable = await run_backdoor_producer(task_path, tmp_dir, n, random_seed, ea_num_runs,
-                                                               ea_instance_sizes,
-                                                               ea_num_iters, mini_confs, log_dir, redis_host,
-                                                               redis_port,
-                                                               no_compile)
+        await asyncio.sleep(2)
+        backdoor_producers_awaitable = await run_backdoor_producer(task_path, tmp_dir, n, random_seed, ea_num_runs,
+                                                                   ea_instance_sizes,
+                                                                   ea_num_iters, mini_confs, log_dir, redis_host,
+                                                                   redis_port,
+                                                                   no_compile)
 
-    return_code = await task_awaitable.wait()
-    print(f"return code = {return_code}")
-    if preprocessing:
-        if return_code == 20:
-            # UNSAT
-            print("UNSAT")
-            pass
-        elif return_code == 10:
-            # SAT
-            if preprocessing:
-                with open(log_dir / "mapl-stdout", 'r') as result_file:
-                    result_file.readline()
-                    result = list(result_file.readline().split()[:-1])
-                    real_result = map(str, processor.restore(result))
-                    with open(log_dir / "mapl-stdout-real", 'w') as real_result_file:
-                        real_result_file.write("SAT\n")
-                        real_result_file.write(' '.join(real_result) + " 0")
-        else:
-            # INDET
-            print("INDET")
-            pass
-
-    for task in backdoor_producers_awaitable:
-        task.kill()
+        return_code = await task_awaitable.wait()
+        print(f"return code = {return_code}")
+        if preprocessing:
+            if return_code == 20:
+                # UNSAT
+                print("UNSAT")
+                pass
+            elif return_code == 10:
+                # SAT
+                print("SAT")
+                if preprocessing:
+                    with open(log_dir / "mapl-stdout", 'r') as result_file:
+                        result_file.readline()
+                        result = list(result_file.readline().split()[:-1])
+                        real_result = map(str, processor.restore(result))
+                        with open(log_dir / "mapl-stdout-real", 'w') as real_result_file:
+                            real_result_file.write("SAT\n")
+                            real_result_file.write(' '.join(real_result) + " 0")
+            else:
+                # INDET
+                print("INDET")
+    finally:
+        for task in backdoor_producers_awaitable:
+            task.kill()
 
 
 def build_backdoor_searcher():
@@ -225,7 +226,7 @@ async def build_and_run_mapl_with_redis_integration(task_path, max_learning, max
     stderr_log_file = "../../.." / log_dir / "mapl-stderr"
     # Run command "./minisat"
     command = (
-        f"./glucose_release {'../../../' / task_path} -max-clause-len={max_learning} -redis-buffer={max_buffer_size} "
+        f"./glucose_release {'../../../' / task_path} -chrono=-1 -max-clause-len={max_learning} -redis-buffer={max_buffer_size} "
         f"-redis-host={redis_host} -redis-port={redis_port}")
     print(command)
     task_awaitable = await asyncio.create_subprocess_shell(f"{command} > {stdout_log_file} 2> {stderr_log_file}")
