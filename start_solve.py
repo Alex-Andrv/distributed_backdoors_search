@@ -104,23 +104,26 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
             elif return_code == 10:
                 # SAT
                 print("SAT")
-                if preprocessing:
-                    with open(log_dir / "mapl-stdout", 'r') as result_file:
-                        first_line = result_file.readline()
-                        if "solution checked" not in first_line:
-                            raise Exception("solution don't  checked ")
-                        second_line = result_file.readline()
-                        if "SATISFIABLE" not in second_line:
-                            raise Exception("file don't contains SATISFIABLE")
-                        ans = result_file.readline().split()
-                        if (ans[0] != 'v') or (ans[-1] != '0'):
-                            raise Exception("Unexpected output format")
-                        result = map(int, list(ans[1:-1]))
+
+                with open(log_dir / "mapl-stdout", 'r') as result_file:
+                    first_line = result_file.readline()
+                    if "solution checked" not in first_line:
+                        raise Exception("solution don't  checked ")
+                    second_line = result_file.readline()
+                    if "SATISFIABLE" not in second_line:
+                        raise Exception("file don't contains SATISFIABLE")
+                    ans = result_file.readline().split()
+                    if (ans[0] != 'v') or (ans[-1] != '0'):
+                        raise Exception("Unexpected output format")
+                    result = map(int, list(ans[1:-1]))
+                    if preprocessing:
                         real_result = map(str, processor.restore(result))
+                        print(" ".join(map(str, real_result)))
                         with open(log_dir / "mapl-stdout-real", 'w') as real_result_file:
                             real_result_file.write("SAT\n")
                             real_result_file.write(' '.join(real_result) + " 0")
-                            print(' '.join(real_result))
+                    else:
+                        print(" ".join(map(str, result)))
             else:
                 # INDET
                 print("INDET")
