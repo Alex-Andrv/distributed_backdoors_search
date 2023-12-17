@@ -124,8 +124,9 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
                 # INDET
                 print("INDET")
     finally:
-        for task in backdoor_producers_awaitable:
-            task.kill()
+        # for task in backdoor_producers_awaitable:
+        #     task.terminate()
+        pass
 
 
 def build_backdoor_searcher():
