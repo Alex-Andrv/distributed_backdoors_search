@@ -112,13 +112,10 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
                         second_line = result_file.readline()
                         if "SATISFIABLE" not in second_line:
                             raise Exception("file don't contains SATISFIABLE")
-                        second_line = result_file.readline()
-                        if "SATISFIABLE" not in second_line:
-                            raise Exception("file don't contains SATISFIABLE")
                         ans = result_file.readline().split()
-                        if (ans[1] != 'v') or (ans[1] != '0'):
+                        if (ans[0] != 'v') or (ans[-1] != '0'):
                             raise Exception("Unexpected output format")
-                        result = list(ans[1:-1])
+                        result = map(int, list(ans[1:-1]))
                         real_result = map(str, processor.restore(result))
                         with open(log_dir / "mapl-stdout-real", 'w') as real_result_file:
                             real_result_file.write("SAT\n")
