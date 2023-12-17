@@ -58,6 +58,18 @@ def clean_dir(path_dir: Path):
             print(f'Error when deleting file {file}: {e}')
             raise e
 
+def read_statistics(result_file):
+    results = dict()
+    for i, line in enumerate(result_file):
+        if i == 7:
+            break
+        words = line.split()
+        key = words[1:words.find(":")]
+        value = words[words.find(":") + 1]
+        results[key] = value
+    return results
+
+
 
 async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile,
                 preprocessing, redis_host,
@@ -106,6 +118,9 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
                 print("SAT")
 
                 with open(log_dir / "mapl-stdout", 'r') as result_file:
+                    statistics = read_statistics(result_file)
+                    for key, value in statistics.items():
+                        print(f"{key} : {value}")
                     first_line = result_file.readline()
                     if "solution checked" not in first_line:
                         raise Exception("solution don't  checked ")
