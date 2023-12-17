@@ -111,7 +111,10 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
             if return_code == 20:
                 # UNSAT
                 print("UNSAT")
-                pass
+                with open(log_dir / "mapl-stdout", 'r') as result_file:
+                    statistics = read_statistics(result_file)
+                    for key, value in statistics.items():
+                        print(f"{key} : {value}")
             elif return_code == 10:
                 # SAT
                 print("SAT")
