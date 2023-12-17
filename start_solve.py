@@ -120,6 +120,7 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
                         with open(log_dir / "mapl-stdout-real", 'w') as real_result_file:
                             real_result_file.write("SAT\n")
                             real_result_file.write(' '.join(real_result) + " 0")
+                            print(' '.join(real_result))
             else:
                 # INDET
                 print("INDET")
