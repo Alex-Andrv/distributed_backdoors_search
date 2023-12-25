@@ -173,7 +173,7 @@ async def run_backdoor_producer(task_path, tmp_dir,
                                 root_log_dir, redis_host,
                                 redis_port, no_compile):
     current_directory = os.getcwd()
-    os.chdir("backdoor-producer")
+    os.chdir("clause-producer")
     if not no_compile:
         build_backdoor_searcher()
 
@@ -183,11 +183,11 @@ async def run_backdoor_producer(task_path, tmp_dir,
     command = f"python star_producer.py --cnf {'../' / task_path}"
     for i, (ea_num_run, ea_instance_size, ea_num_iters, mini_conf) in enumerate(
             zip(ea_num_runs, ea_instance_sizes, ea_num_iters, mini_confs)):
-        log_dir = '../' / root_log_dir / f"backdoor-producer-instance:{i}-ea_num_run:{ea_num_run}-ea_instance_size:{ea_instance_size}-ea_num_iters:{ea_num_iters}-mini_conf:{mini_conf}"
+        log_dir = '../' / root_log_dir / f"clause-producer-instance:{i}-ea_num_run:{ea_num_run}-ea_instance_size:{ea_instance_size}-ea_num_iters:{ea_num_iters}-mini_conf:{mini_conf}"
         experement_dir = os.path.join(log_dir, "experement")
         os.makedirs(log_dir)
-        stdout_log_file = log_dir / "backdoor-producer-stdout"
-        stderr_log_file = log_dir / "backdoor-producer-stderr"
+        stdout_log_file = log_dir / "clause-producer-stdout"
+        stderr_log_file = log_dir / "clause-producer-stderr"
         new_seed = random.randint(1, 10000)
         params = (
             f"--tmp {tmp_dir + str(i)} --random-seed {new_seed} --ea-num-runs {ea_num_run} --ea-instance-size {ea_instance_size} --ea-num-iters {ea_num_iters} "
@@ -276,7 +276,7 @@ def flushall_redis(redis_host, redis_port):
 @click.argument('task_path', required=True, type=click.Path(exists=True))
 @click.option('--max-learning', type=int, default=10, help='Maximum length of lernt for Redis')
 @click.option('--max-buffer-size', type=int, default=5000, help='Maximum buffer size for Redis')
-@click.option('-tmp', '--tmp-dir', type=click.Path(exists=False), default='./backdoor-producer/tmp',
+@click.option('-tmp', '--tmp-dir', type=click.Path(exists=False), default='./clause-producer/tmp',
               help='Path to temporary directory')
 @click.option('-log', '--log-dir', type=click.Path(exists=False), default='./log',
               help='Path to log file')
@@ -288,9 +288,9 @@ def flushall_redis(redis_host, redis_port):
 @click.option(
     "--preprocessing/--no-preprocessing", "preprocessing", default=True, help="using CaDiCaL(1.5.3) preprocessing"
 )
-@click.option('--redis-host', default='localhost', help='Redis server host')
+@click.option('--redis-host', default='127.0.0.1', help='Redis server host')
 @click.option('--redis-port', default=6379, help='Redis server port')
-@click.option('-n', type=int, required=True, help='Number of different backdoor-producer runs')
+@click.option('-n', type=int, required=True, help='Number of different clause-producer runs')
 @click.option('-er', '--ea-num-runs', type=int, required=True, multiple=True, help='Number of backdoors')
 @click.option('-es', '--ea-instance-sizes', type=int, required=True, multiple=True, help='Backdoor size')
 @click.option('-ei', '--ea-num-iters', type=int, required=True, multiple=True, help='Number of iterations')
@@ -307,7 +307,7 @@ def main(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed
     click.echo(f'Maximum length of lernt for Redis: {max_learning}')
     click.echo(f'Maximum buffer size for Redis: {max_buffer_size}')
     click.echo(f'Path to temporary directory: {tmp_dir}')
-    click.echo(f'Number of different backdoor-producer runs: {n}')
+    click.echo(f'Number of different clause-producer runs: {n}')
     click.echo(f'Number of backdoors: {ea_num_runs}')
     click.echo(f'Backdoor size: {ea_instance_sizes}')
     click.echo(f'Number of iterations: {ea_num_iters}')
