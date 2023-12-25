@@ -13,3 +13,6 @@
 [submodule "sat-nexus"]
 	path = sat-nexus
 	url = https://github.com/Lipen/sat-nexus.git
+[submodule "new_clause_producer"]
+	path = new_clause_producer
+	url = git@github.com:Alex-Andrv/new_clause_producer.git
