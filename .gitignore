@@ -6,3 +6,4 @@ tmp/
 log/
 
 hiredis-1.2.0/
+/data/

@@ -1,12 +1,15 @@
 [submodule "kissat_with_db_integration"]
 	path = kissat_with_db_integration
 	url = git@github.com:Alex-Andrv/kissat_with_db_integration.git
-[submodule "backdoor-producer"]
-	path = backdoor-producer
-	url = git@github.com:Alex-Andrv/backdoor-producer.git
+[submodule "clause-producer"]
+	path = clause-producer
+	url = git@github.com:Alex-Andrv/clause-producer.git
 [submodule "minisat_with_redis_integration"]
 	path = minisat_with_redis_integration
 	url = git@github.com:Alex-Andrv/minisat_with_redis_integration.git
 [submodule "Maple_LCM_Dist_Chrono_with_redis"]
 	path = Maple_LCM_Dist_Chrono_with_redis
 	url = git@github.com:Alex-Andrv/Maple_LCM_Dist_Chrono_with_redis.git
+[submodule "sat-nexus"]
+	path = sat-nexus
+	url = https://github.com/Lipen/sat-nexus.git
