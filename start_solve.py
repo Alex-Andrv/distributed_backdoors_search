@@ -58,6 +58,7 @@ def clean_dir(path_dir: Path):
             print(f'Error when deleting file {file}: {e}')
             raise e
 
+
 def read_statistics(result_file):
     results = dict()
     for _ in range(7):
@@ -69,8 +70,8 @@ def read_statistics(result_file):
     return results
 
 
-
-async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile,
+async def solve(derive_bin: Path, search_bin: Path, task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir,
+                random_seed, no_compile,
                 preprocessing, redis_host,
                 redis_port, n, ea_num_runs, ea_instance_sizes,
                 ea_num_iters, mini_confs):
@@ -99,7 +100,8 @@ async def solve(task_path: Path, max_learning, max_buffer_size, tmp_dir, log_dir
                                                                          log_dir, redis_host, redis_port, no_compile)
 
         await asyncio.sleep(2)
-        backdoor_producers_awaitable = await run_backdoor_producer(task_path, tmp_dir, n, random_seed, ea_num_runs,
+        backdoor_producers_awaitable = await run_backdoor_producer(derive_bin, search_bin, task_path, tmp_dir, n,
+                                                                   random_seed, ea_num_runs,
                                                                    ea_instance_sizes,
                                                                    ea_num_iters, mini_confs, log_dir, redis_host,
                                                                    redis_port,
@@ -168,14 +170,17 @@ def build_backdoor_searcher():
     os.chdir(current_directory)
 
 
-async def run_backdoor_producer(task_path, tmp_dir,
-                                n, random_seed,
-                                ea_num_runs, ea_instance_sizes,
-                                ea_num_iters, mini_confs,
-                                root_log_dir, redis_host,
-                                redis_port, no_compile):
+async def run_backdoor_producer(
+        derive_bin: Path,
+        search_bin: Path,
+        task_path, tmp_dir,
+        n, random_seed,
+        ea_num_runs, ea_instance_sizes,
+        ea_num_iters, mini_confs,
+        root_log_dir, redis_host,
+        redis_port, no_compile):
     current_directory = os.getcwd()
-    os.chdir("clause-producer")
+    os.chdir("new_clause_producer")
     if not no_compile:
         build_backdoor_searcher()
 
@@ -192,7 +197,8 @@ async def run_backdoor_producer(task_path, tmp_dir,
         stderr_log_file = log_dir / "clause-producer-stderr"
         new_seed = random.randint(1, 10000)
         params = (
-            f"--tmp {tmp_dir + str(i)} --random-seed {new_seed} --ea-num-runs {ea_num_run} --ea-instance-size {ea_instance_size} --ea-num-iters {ea_num_iters} "
+            f"--derive-bin {derive_bin} --search-bin {search_bin} --tmp {tmp_dir + str(i)} --random-seed {new_seed} "
+            f"--ea-num-runs {ea_num_run} --ea-instance-size {ea_instance_size} --ea-num-iters {ea_num_iters} "
             f"--mini-conf {mini_conf} --root-log-dir {experement_dir} --redis-host {redis_host} --redis-port {redis_port}")
         redirect = f" > {stdout_log_file} 2> {stderr_log_file}"
         tasks.append(await asyncio.create_subprocess_shell(command + " " + params + " " + redirect))
@@ -200,6 +206,10 @@ async def run_backdoor_producer(task_path, tmp_dir,
 
     os.chdir(current_directory)
     return tasks
+
+
+
+
 
 
 async def build_and_run_minisat_with_redis_integration(task_path, max_learning, max_buffer_size, log_dir,
@@ -276,6 +286,8 @@ def flushall_redis(redis_host, redis_port):
 
 @click.command()
 @click.argument('task_path', required=True, type=click.Path(exists=True))
+@click.option("--derive-bin", "derive_bin", required=True, type=click.Path(exists=True), help="Path to derive exe file")
+@click.option("--search-bin", "search_bin", required=True, type=click.Path(exists=True), help="Path to search exe file")
 @click.option('--max-learning', type=int, default=10, help='Maximum length of lernt for Redis')
 @click.option('--max-buffer-size', type=int, default=5000, help='Maximum buffer size for Redis')
 @click.option('-tmp', '--tmp-dir', type=click.Path(exists=False), default='./clause-producer/tmp',
@@ -297,7 +309,7 @@ def flushall_redis(redis_host, redis_port):
 @click.option('-es', '--ea-instance-sizes', type=int, required=True, multiple=True, help='Backdoor size')
 @click.option('-ei', '--ea-num-iters', type=int, required=True, multiple=True, help='Number of iterations')
 @click.option('-c', '--mini-confs', type=int, required=True, multiple=True, help='Number of conflicts')
-def main(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile,
+def main(task_path, max_learning, derive_bin, search_bin, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile,
          preprocessing, redis_host, redis_port, n, ea_num_runs,
          ea_instance_sizes, ea_num_iters, mini_confs):
     """
@@ -315,6 +327,9 @@ def main(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed
     click.echo(f'Number of iterations: {ea_num_iters}')
     assert (len(ea_num_runs) == len(ea_instance_sizes) == len(ea_num_iters) == n), "Dimensions do not match"
 
+    derive_bin = Path(os.path.abspath(derive_bin))
+    search_bin = Path(os.path.abspath(search_bin))
+
     os.makedirs(log_dir, exist_ok=True)
     print(f"log dir: {log_dir}")
 
@@ -323,7 +338,8 @@ def main(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
-        solve(task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed, no_compile, preprocessing,
+        solve(derive_bin, search_bin, task_path, max_learning, max_buffer_size, tmp_dir, log_dir, random_seed,
+              no_compile, preprocessing,
               redis_host,
               redis_port, n, ea_num_runs, ea_instance_sizes,
               ea_num_iters, mini_confs))
